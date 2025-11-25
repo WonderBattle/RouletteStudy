@@ -8,6 +8,14 @@ from components.game import Game
 from utils.plot_helpers import create_single_wheel_plot, THEORETICAL_EDGES
 import numpy as np
 
+def get_plot_path(filename):
+    """Get path for saving plots in experiment's plots folder"""
+    # Get the directory where THIS script is located
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    plots_dir = os.path.join(current_dir, "plots")
+    os.makedirs(plots_dir, exist_ok=True)
+    return os.path.join(plots_dir, filename)
+
 def run_european_experiment():
     """
     Detailed house edge analysis for European roulette
@@ -49,7 +57,8 @@ def run_european_experiment():
     
     # Create and save plot
     plt = create_single_wheel_plot(experimental_edges, wheel_type, num_runs, num_spins)
-    plt.savefig('european_house_edge.png', dpi=300, bbox_inches='tight')
+    path = get_plot_path('european_house_edge.png')
+    plt.savefig(path, dpi=300, bbox_inches='tight')
     plt.show()
     
     print(f"📊 Plot saved as 'european_house_edge.png'")

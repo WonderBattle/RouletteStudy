@@ -8,6 +8,14 @@ from components.game import Game
 from utils.plot_helpers import create_comparison_plot, THEORETICAL_EDGES
 import numpy as np
 
+def get_plot_path(filename):
+    """Get path for saving plots in experiment's plots folder"""
+    # Get the directory where THIS script is located
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    plots_dir = os.path.join(current_dir, "plots")
+    os.makedirs(plots_dir, exist_ok=True)
+    return os.path.join(plots_dir, filename)
+
 def run_comparison_experiment():
     """
     Compare house edges across all three wheel types
@@ -46,7 +54,8 @@ def run_comparison_experiment():
     
     # Create comparison plot
     plt = create_comparison_plot(all_results, num_runs, num_spins)
-    plt.savefig('all_house_edges_comparison.png', dpi=300, bbox_inches='tight')
+    path = get_plot_path('all_house_edges_comparison.png')
+    plt.savefig(path, dpi=300, bbox_inches='tight')
     plt.show()
     
     print(f"\n📊 Comparison plot saved as 'all_house_edges_comparison.png'")
