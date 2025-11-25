@@ -8,6 +8,14 @@ from components.game import Game
 import matplotlib.pyplot as plt
 import numpy as np
 
+def get_plot_path(filename):
+    """Get path for saving plots in experiment's plots folder"""
+    # Get the directory where THIS script is located
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    plots_dir = os.path.join(current_dir, "plots")
+    os.makedirs(plots_dir, exist_ok=True)
+    return os.path.join(plots_dir, filename)
+
 def run_all_strategy_comparison():
     """
     EXPERIMENT 2: Strategy Comparison Across All Roulette Types
@@ -104,7 +112,8 @@ def create_comprehensive_comparison_plot(all_results, num_spins):
     ax2.grid(True, alpha=0.3)
     
     plt.tight_layout()
-    plt.savefig('strategy_comparison_all_types.png', dpi=300, bbox_inches='tight')
+    original_path = get_plot_path('strategy_comparison_all_types.png')
+    plt.savefig(original_path, dpi=300, bbox_inches='tight')
     plt.show()
     
     print(f"\n📊 Comprehensive comparison plot saved as 'strategy_comparison_all_types.png'")

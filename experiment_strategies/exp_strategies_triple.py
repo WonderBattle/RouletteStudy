@@ -8,6 +8,14 @@ from components.game import Game
 from utils.strategy_helpers import create_strategy_plot, create_enhanced_strategy_plot, analyze_martingale_risk
 import matplotlib.pyplot as plt
 
+def get_plot_path(filename):
+    """Get path for saving plots in experiment's plots folder"""
+    # Get the directory where THIS script is located
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    plots_dir = os.path.join(current_dir, "plots")
+    os.makedirs(plots_dir, exist_ok=True)
+    return os.path.join(plots_dir, filename)
+
 def run_triple_strategy_comparison():
     """
     EXPERIMENT 2: Strategy Comparison on TRIPLE Roulette
@@ -66,24 +74,36 @@ def run_triple_strategy_comparison():
     # Analyze Martingale behavior
     max_bet, bet_counts, _ = analyze_martingale_risk(game_martingale)
     print(f"  • Maximum bet placed: ${max_bet:,}")
-    print(f"  • Bet distribution: {bet_counts}")
+    #print(f"  • Bet distribution: {bet_counts}")
     
     # Find interesting sequences for annotation
     interesting_sequences = find_interesting_sequences(martingale_bets, martingale_bankrolls)
     print_sequence_analysis(interesting_sequences)
     
+    # Calculate how many sequences reached each bet level
+    sequence_max_bets = {}
+    for seq in interesting_sequences:
+        max_bet_in_seq = max(bet for _, bet, _ in seq)
+        sequence_max_bets[max_bet_in_seq] = sequence_max_bets.get(max_bet_in_seq, 0) + 1
+    
+    print(f"\n  • Sequences reaching each bet level: {sequence_max_bets}")
+
     # Create ENHANCED comparison plot (dual panel)
     fig = create_enhanced_strategy_plot(flat_bankrolls, martingale_bankrolls, martingale_bets, num_spins, wheel_type)
-    fig.savefig('strategy_comparison_triple_enhanced.png', dpi=300, bbox_inches='tight')
+    enhanced_path = get_plot_path('strategy_comparison_triple_enhanced.png')
+    fig.savefig(enhanced_path, dpi=300, bbox_inches='tight')
     plt.show()
     
     # Also create original plot for comparison
     plt_original = create_strategy_plot(flat_bankrolls, martingale_bankrolls, num_spins, wheel_type)
-    plt_original.savefig('strategy_comparison_triple_original.png', dpi=300, bbox_inches='tight')
+    original_path = get_plot_path('strategy_comparison_triple_original.png')
+    plt_original.savefig(original_path, dpi=300, bbox_inches='tight')
     plt_original.show()
     
     print(f"\n📊 Enhanced plot saved as 'strategy_comparison_triple_enhanced.png'")
     print(f"📊 Original plot saved as 'strategy_comparison_triple_original.png'")
+
+
 def find_interesting_sequences(martingale_bets, martingale_bankrolls):
     """
     Find interesting sequences in Martingale betting pattern
@@ -93,21 +113,22 @@ def find_interesting_sequences(martingale_bets, martingale_bankrolls):
     
     for i, bet in enumerate(martingale_bets):
         if not current_sequence:
-            current_sequence.append((i, bet))
+            current_sequence.append((i, bet, martingale_bankrolls[i]))
         elif bet > current_sequence[-1][1]:
             # Bet increased - continuing losing streak
-            current_sequence.append((i, bet))
+            current_sequence.append((i, bet, martingale_bankrolls[i]))
         else:
-            # Bet reset - streak ended
-            if len(current_sequence) >= 4:  # Only care about sequences of 4+ losses
+            # Bet reset - streak ended (either win or new sequence)
+            if len(current_sequence) >= 3:  # Sequences of 3+ losses
                 sequences.append(current_sequence)
-            current_sequence = [(i, bet)]
+            current_sequence = [(i, bet, martingale_bankrolls[i])]
     
     # Don't forget the last sequence
-    if len(current_sequence) >= 4:
+    if len(current_sequence) >= 3:
         sequences.append(current_sequence)
     
     return sequences
+
 
 def print_sequence_analysis(sequences):
     """
@@ -115,15 +136,33 @@ def print_sequence_analysis(sequences):
     """
     if sequences:
         print(f"\n--- MARTINGALE SEQUENCE ANALYSIS ---")
-        for i, seq in enumerate(sequences[:5]):  # Show first 5 sequences
-            start_spin, start_bet = seq[0]
-            end_spin, max_bet = seq[-1]
+        
+        # Sort sequences by maximum bet (highest risk first)
+        sequences.sort(key=lambda seq: max(bet for _, bet, _ in seq), reverse=True)
+        
+        for i, seq in enumerate(sequences[:8]):  # Show top 8 sequences
+            start_spin, start_bet, start_br = seq[0]
+            end_spin, max_bet, end_br = seq[-1]
             losses = len(seq) - 1  # Number of consecutive losses
             
-            print(f"Sequence {i+1}:")
+            # Calculate total risked in this sequence
+            total_risked = sum(bet for _, bet, _ in seq)
+            
+            # Determine if the sequence ended with a win or loss
+            # If bet reset after this sequence, it means the last spin was a WIN
+            sequence_result = "WON" if end_br > start_br else "LOST"
+            profit_loss = end_br - start_br
+            
+            print(f"Sequence {i+1} ({sequence_result}):")
             print(f"  • Spins {start_spin}-{end_spin} ({losses} consecutive losses)")
-            print(f"  • Bet progression: ${seq[0][1]} → ${max_bet}")
-            print(f"  • Total risked: ${sum(bet for _, bet in seq):,}")
+            print(f"  • Bet progression: ${start_bet} → ${max_bet}")
+            print(f"  • Total risked: ${total_risked:,}")
+            print(f"  • Result: {sequence_result} ${abs(profit_loss):,}")
+            
+            # Show the actual bet sequence for long streaks
+            if losses >= 5:
+                bet_sequence = [bet for _, bet, _ in seq]
+                print(f"  • Bet sequence: {bet_sequence}")
 
 if __name__ == "__main__":
     run_triple_strategy_comparison()

@@ -75,7 +75,7 @@ def run_american_strategy_comparison():
     max_bet, bet_counts, _ = analyze_martingale_risk(game_martingale)
     print(f"  • Maximum bet placed: ${max_bet:,}")
     #print(f"  • Bet distribution: {bet_counts}")
-    print(f"  • Number of bets at each level: {bet_counts}")
+    #print(f"  • Number of bets at each level: {bet_counts}")
     
     # Find interesting sequences for annotation
     interesting_sequences = find_interesting_sequences(martingale_bets, martingale_bankrolls)
@@ -168,6 +168,3 @@ def print_sequence_analysis(sequences):
 
 if __name__ == "__main__":
     run_american_strategy_comparison()
-
-
-# just trying

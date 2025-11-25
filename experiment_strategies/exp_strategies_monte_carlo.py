@@ -8,6 +8,14 @@ from components.game import Game
 import matplotlib.pyplot as plt
 import numpy as np
 
+def get_plot_path(filename):
+    """Get path for saving plots in experiment's plots folder"""
+    # Get the directory where THIS script is located
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    plots_dir = os.path.join(current_dir, "plots")
+    os.makedirs(plots_dir, exist_ok=True)
+    return os.path.join(plots_dir, filename)
+
 def run_strategy_monte_carlo():
     """
     MONTE CARLO ANALYSIS: Strategy Comparison with Multiple Players
@@ -17,8 +25,8 @@ def run_strategy_monte_carlo():
     print("=" * 70)
     
     wheel_type = "european"
-    num_players = 100  # Test 100 players for each strategy
-    num_spins = 1000   # Fewer spins per player for faster execution
+    num_players = 10000  # Test 100 players for each strategy
+    num_spins = 5000   # Fewer spins per player for faster execution
     
     print(f"Testing {num_players} players for each strategy on {wheel_type.upper()} roulette")
     print(f"Each player plays {num_spins} spins")
@@ -98,7 +106,8 @@ def create_monte_carlo_plot(flat_finals, martingale_finals, num_players, num_spi
     plt.grid(True, alpha=0.3)
     
     plt.tight_layout()
-    plt.savefig('strategy_monte_carlo.png', dpi=300, bbox_inches='tight')
+    path = get_plot_path('strategy_monte_carlo.png')    
+    plt.savefig(path, dpi=300, bbox_inches='tight')
     plt.show()
     
     print(f"\n📊 Monte Carlo plot saved as 'strategy_monte_carlo.png'")
