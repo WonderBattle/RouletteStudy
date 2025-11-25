@@ -78,3 +78,42 @@ def create_distribution_comparison(color_results, number_results, num_players, n
     plt.grid(True, alpha=0.3)
     
     return plt
+
+def create_three_wheel_comparison(euro_data, amer_data, trip_data, num_players, num_spins, bet_type="Color"):
+    """
+    Overlays histograms of all 3 wheels to show the 'Shift' in expected value.
+    """
+    plt.figure(figsize=(12, 7))
+    
+    # Create common bins so the bars align perfectly
+    all_data = euro_data + amer_data + trip_data
+    bins = np.linspace(min(all_data), max(all_data), 60)
+    
+    # Plot European (Best Odds)
+    plt.hist(euro_data, bins=bins, alpha=0.5, label='European (1 Zero)', 
+             color='blue', edgecolor='black', density=True)
+    
+    # Plot American (Medium Odds)
+    plt.hist(amer_data, bins=bins, alpha=0.5, label='American (2 Zeros)', 
+             color='orange', edgecolor='black', density=True)
+    
+    # Plot Triple (Worst Odds)
+    plt.hist(trip_data, bins=bins, alpha=0.5, label='Triple Zero (3 Zeros)', 
+             color='green', edgecolor='black', density=True)
+    
+    # Add Reference Line (Start)
+    plt.axvline(x=1000, color='red', linestyle='--', linewidth=2, label='Start ($1000)')
+    
+    # Add Average Lines (The "Drift")
+    plt.axvline(x=np.mean(euro_data), color='blue', linestyle=':', linewidth=2)
+    plt.axvline(x=np.mean(amer_data), color='orange', linestyle=':', linewidth=2)
+    plt.axvline(x=np.mean(trip_data), color='green', linestyle=':', linewidth=2)
+    
+    plt.xlabel('Final Bankroll ($)')
+    plt.ylabel('Probability Density')
+    #plt.title(f'The Cost of Zeros: Wheel Comparison\n(Flat Betting on Color, {num_players} Players, {num_spins} Spins)')
+    plt.title(f'The Cost of Zeros: Wheel Comparison\n(Flat Betting on {bet_type}, {num_players} Players, {num_spins} Spins)')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    
+    return plt
