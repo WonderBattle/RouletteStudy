@@ -1,24 +1,24 @@
 import sys
 import os
-sys.path.insert(0, '/home/elenacg/ADA511/Project/roulette_project')
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from components.roulette_wheel import RouletteWheel
 from components.player import Player
 from components.game import Game
-from utils.plot_helpers import create_comparison_plot, THEORETICAL_EDGES, get_plot_path
+from utils.plot_helpers import create_comparison_plot, THEORETICAL_EDGES
+from utils.monte_carlo_helpers import get_plot_path 
 import numpy as np
-
+import matplotlib.pyplot as plt
 
 def run_comparison_experiment():
-    """
-    Compare house edges across all three wheel types
-    """
+    """Compare house edges across all three wheel types"""
     print("🎯 COMPARISON: House Edge Across All Roulette Types")
     print("=" * 60)
     
     wheel_types = ["european", "american", "triple"]
     num_runs = 15
     num_spins = 50000
+    START_BANKROLL = 10000
     
     all_results = {}
     
@@ -28,27 +28,29 @@ def run_comparison_experiment():
         
         for run in range(num_runs):
             wheel = RouletteWheel(wheel_type)
-            player = Player(strategy="flat", initial_bankroll=10000)
+            
+            # Explicitly configure player for the new Game logic
+            player = Player(strategy="flat", initial_bankroll=START_BANKROLL, base_bet=10)
+            player.bet_type = "color"
+            player.bet_value = "red"
+            
             game = Game(wheel, player)
             game.run_simulation(num_spins)
             
             total_wagered = num_spins * player.base_bet
-            total_loss = 10000 - player.bankroll
-            experimental_edge = (total_loss / total_wagered) * 100
+            total_loss = START_BANKROLL - player.bankroll
             
+            experimental_edge = (total_loss / total_wagered) * 100
             experimental_edges.append(experimental_edge)
             print(f"  Run {run + 1:2d}: {experimental_edge:.2f}%")
         
         all_results[wheel_type] = experimental_edges
         
-        # Show summary for this wheel type
         avg_edge = np.mean(experimental_edges)
         print(f"  Average: {avg_edge:.2f}% (Theoretical: {THEORETICAL_EDGES[wheel_type]}%)")
     
-    # [Define current_folder variable]
     current_folder = os.path.dirname(os.path.abspath(__file__))
 
-    # Create comparison plot
     plt = create_comparison_plot(all_results, num_runs, num_spins)
     path = get_plot_path(current_folder, 'all_house_edges_comparison.png')
     plt.savefig(path, dpi=300, bbox_inches='tight')

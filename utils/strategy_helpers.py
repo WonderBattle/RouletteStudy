@@ -125,3 +125,49 @@ def analyze_martingale_risk(game_martingale):
         bet_counts[sequence_bet] = bet_counts.get(sequence_bet, 0) + 1
     
     return max_bet, bet_counts, martingale_bets
+
+
+def create_strategy_comparison_bar_plot(all_results):
+    """
+    Creates a bar chart comparing Flat vs Martingale across all 3 wheels.
+    """
+    wheel_types = list(all_results.keys()) # ['european', 'american', 'triple']
+    
+    # Extract data
+    flat_finals = [all_results[wt]['flat_final'] for wt in wheel_types]
+    mart_finals = [all_results[wt]['martingale_final'] for wt in wheel_types]
+    
+    # Setup plot
+    fig, ax = plt.subplots(figsize=(12, 6))
+    
+    x = np.arange(len(wheel_types))
+    width = 0.35
+    
+    # Create bars
+    rects1 = ax.bar(x - width/2, flat_finals, width, label='Flat Betting', color='blue', alpha=0.7)
+    rects2 = ax.bar(x + width/2, mart_finals, width, label='Martingale', color='red', alpha=0.7)
+    
+    # Styling
+    ax.axhline(y=1000, color='black', linestyle='--', label='Start ($1000)')
+    ax.set_ylabel('Final Bankroll ($)')
+    ax.set_title('Strategy Comparison: Final Bankroll by Wheel Type')
+    ax.set_xticks(x)
+    ax.set_xticklabels([w.title() for w in wheel_types])
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+    
+    # Add value labels on top of bars
+    def autolabel(rects):
+        for rect in rects:
+            height = rect.get_height()
+            ax.annotate(f'${int(height)}',
+                        xy=(rect.get_x() + rect.get_width() / 2, height),
+                        xytext=(0, 3),  # 3 points vertical offset
+                        textcoords="offset points",
+                        ha='center', va='bottom', fontsize=9)
+
+    autolabel(rects1)
+    autolabel(rects2)
+    
+    plt.tight_layout()
+    return fig

@@ -1,116 +1,101 @@
 import sys
 import os
-sys.path.insert(0, '/home/elenacg/ADA511/Project/roulette_project')
+# 1. Add project root to system path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from components.roulette_wheel import RouletteWheel
 from components.player import Player
 from components.game import Game
-import matplotlib.pyplot as plt
+# Use shared path helper
+from utils.monte_carlo_helpers import get_plot_path 
 import numpy as np
-from utils.strategy_helpers import (
-    get_plot_path
-)
-
+import matplotlib.pyplot as plt
 
 def run_strategy_monte_carlo():
     """
-    MONTE CARLO ANALYSIS: Strategy Comparison with Multiple Players
-    Run many players with each strategy to see the distribution of outcomes
+    Runs a Monte Carlo simulation comparing Flat vs Martingale.
     """
-    print("🎯 MONTE CARLO: Strategy Comparison with Multiple Players")
-    print("=" * 70)
+    print("🎯 STRATEGY MONTE CARLO: Flat vs Martingale")
+    print("=" * 60)
     
+    # Configuration
     wheel_type = "european"
-    num_players = 100  # Test 100 players for each strategy
-    num_spins = 1000   # Fewer spins per player for faster execution
+    num_players = 100
+    num_spins = 1000
+    START_BANKROLL = 1000
     
-    print(f"Testing {num_players} players for each strategy on {wheel_type.upper()} roulette")
-    print(f"Each player plays {num_spins} spins")
+    print(f"Simulating {num_players} players, {num_spins} spins each...")
+    print(f"Wheel: {wheel_type.upper()} | Bankroll: ${START_BANKROLL}")
     
-    # Store results for all players
-    flat_finals = []
-    martingale_finals = []
-    martingale_max_bets = []
+    flat_results = []
+    martingale_results = []
     
-    for player_num in range(num_players):
-        if (player_num + 1) % 20 == 0:
-            print(f"  Completed {player_num + 1}/{num_players} players...")
+    for i in range(num_players):
+        if (i+1) % 20 == 0: print(f"  Simulating player {i+1}/{num_players}...")
         
-        # Flat betting player
-        wheel_flat = RouletteWheel(wheel_type)
-        flat_player = Player(strategy="flat", initial_bankroll=1000, base_bet=10)
-        game_flat = Game(wheel_flat, flat_player)
-        game_flat.run_simulation(num_spins)
-        flat_finals.append(flat_player.bankroll)
+        # --- 1. Flat Betting Simulation ---
+        wheel_f = RouletteWheel(wheel_type)
         
-        # Martingale player  
-        wheel_martingale = RouletteWheel(wheel_type)
-        martingale_player = Player(strategy="martingale", initial_bankroll=1000, base_bet=10)
-        game_martingale = Game(wheel_martingale, martingale_player)
-        game_martingale.run_simulation(num_spins)
-        martingale_finals.append(martingale_player.bankroll)
-        martingale_max_bets.append(max([spin['bet_amount'] for spin in game_martingale.history]))
-    
-    # Calculate statistics
-    flat_avg = np.mean(flat_finals)
-    martingale_avg = np.mean(martingale_finals)
-    flat_std = np.std(flat_finals)
-    martingale_std = np.std(martingale_finals)
-    
-    # Players who ended ahead
-    flat_ahead = len([b for b in flat_finals if b > 1000])
-    martingale_ahead = len([b for b in martingale_finals if b > 1000])
-    
-    print(f"\n--- MONTE CARLO RESULTS ({num_players} PLAYERS) ---")
+        # FIX: Explicit Configuration for new Game logic
+        player_f = Player(strategy="flat", initial_bankroll=START_BANKROLL, base_bet=10)
+        player_f.bet_type = "color"
+        player_f.bet_value = "red"
+        
+        game_f = Game(wheel_f, player_f) # Infinite limit (Default)
+        game_f.run_simulation(num_spins)
+        flat_results.append(player_f.bankroll)
+        
+        # --- 2. Martingale Simulation ---
+        wheel_m = RouletteWheel(wheel_type)
+        
+        # FIX: Explicit Configuration for new Game logic
+        player_m = Player(strategy="martingale", initial_bankroll=START_BANKROLL, base_bet=10)
+        player_m.bet_type = "color"
+        player_m.bet_value = "red"
+        
+        game_m = Game(wheel_m, player_m) # Infinite limit (Default)
+        game_m.run_simulation(num_spins)
+        martingale_results.append(player_m.bankroll)
+
+    # Statistics (Simple format)
+    print("\n--- RESULTS ---")
     print(f"FLAT BETTING:")
-    print(f"  • Average final bankroll: ${flat_avg:.0f}")
-    print(f"  • Standard deviation: ${flat_std:.0f}")
-    print(f"  • Players ahead: {flat_ahead}/{num_players} ({flat_ahead/num_players*100:.1f}%)")
+    print(f"  • Average Final: ${np.mean(flat_results):.2f}")
+    print(f"  • Std Dev: ${np.std(flat_results):.2f}")
+    print(f"  • Max Win: ${max(flat_results):.2f}")
+    print(f"  • Max Loss: ${min(flat_results):.2f}")
     
     print(f"\nMARTINGALE:")
-    print(f"  • Average final bankroll: ${martingale_avg:.0f}") 
-    print(f"  • Standard deviation: ${martingale_std:.0f}")
-    print(f"  • Players ahead: {martingale_ahead}/{num_players} ({martingale_ahead/num_players*100:.1f}%)")
-    print(f"  • Average max bet: ${np.mean(martingale_max_bets):.0f}")
-    print(f"  • Highest max bet: ${max(martingale_max_bets):,}")
-    
-    # Create distribution plot
-    create_monte_carlo_plot(flat_finals, martingale_finals, num_players, num_spins, wheel_type)
+    print(f"  • Average Final: ${np.mean(martingale_results):.2f}")
+    print(f"  • Std Dev: ${np.std(martingale_results):.2f}")
+    print(f"  • Max Win: ${max(martingale_results):.2f}")
+    print(f"  • Max Loss: ${min(martingale_results):.2f}")
 
-def create_monte_carlo_plot(flat_finals, martingale_finals, num_players, num_spins, wheel_type):
-    """
-    Create histogram showing distribution of outcomes for both strategies
-    """
-    plt.figure(figsize=(12, 8))
+    # Plotting
+    print("\nGenerating Histogram Comparison...")
+    plt.figure(figsize=(12, 6))
     
-    # Create histograms
-    bins = np.linspace(min(flat_finals + martingale_finals), 
-                      max(flat_finals + martingale_finals), 30)
+    # Create bins based on all data
+    all_data = flat_results + martingale_results
+    bins = np.linspace(min(all_data), max(all_data), 50)
     
-    plt.hist(flat_finals, bins=bins, alpha=0.7, label='Flat Betting', 
-             color='blue', edgecolor='black')
-    plt.hist(martingale_finals, bins=bins, alpha=0.7, label='Martingale',
-             color='red', edgecolor='black')
+    plt.hist(flat_results, bins=bins, alpha=0.6, label='Flat Betting', color='blue', edgecolor='black')
+    plt.hist(martingale_results, bins=bins, alpha=0.5, label='Martingale', color='red', edgecolor='black')
     
-    plt.axvline(x=1000, color='black', linestyle='--', linewidth=2, 
-                label='Starting Bankroll ($1000)')
+    plt.axvline(x=START_BANKROLL, color='green', linestyle='--', label='Start ($1000)')
+    plt.title(f'Distribution of Outcomes: Flat vs Martingale\n({num_players} Players, {num_spins} Spins, European Wheel)')
     plt.xlabel('Final Bankroll ($)')
-    plt.ylabel('Number of Players')
-    plt.title(f'Strategy Outcome Distribution: {wheel_type.upper()} Roulette\n'
-              f'({num_players} players, {num_spins} spins each)')
+    plt.ylabel('Frequency')
     plt.legend()
     plt.grid(True, alpha=0.3)
     
-    plt.tight_layout()
-
-    # [Define current_folder variable]
+    # FIX: Use shared path helper
     current_folder = os.path.dirname(os.path.abspath(__file__))
-
-    path = get_plot_path(current_folder,'strategy_monte_carlo.png')    
+    path = get_plot_path(current_folder, 'strategy_monte_carlo.png')
+    
     plt.savefig(path, dpi=300, bbox_inches='tight')
     plt.show()
-    
-    print(f"\n📊 Monte Carlo plot saved as 'strategy_monte_carlo.png'")
+    print(f"📊 Plot saved to {path}")
 
 if __name__ == "__main__":
     run_strategy_monte_carlo()

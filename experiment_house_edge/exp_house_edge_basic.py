@@ -1,6 +1,7 @@
 import sys
 import os
-sys.path.insert(0, '/home/elenacg/ADA511/Project/roulette_project')
+# 1. Add project root to system path to find 'components'
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from components.roulette_wheel import RouletteWheel
 from components.player import Player
@@ -8,42 +9,51 @@ from components.game import Game
 
 def run_house_edge_experiment():
     """
-    EXPERIMENT 1: Verify House Edge
-    This experiment tests if our simulation matches theoretical house edges:
-    - European: 2.70% theoretical edge
-    - American: 5.26% theoretical edge  
-    - Triple Zero: 7.69% theoretical edge
+    EXPERIMENT 1: Verify House Edge (Basic Text Output)
+    Tests if our simulation matches theoretical math using a long run of spins.
     """
     print("🎯 EXPERIMENT 1: House Edge Verification")
     print("=" * 50)
     
-    # Test all three wheel types
     wheel_types = ["european", "american", "triple"]
+    
+    # We can use a realistic bankroll now because the Game allows debt!
+    START_BANKROLL = 10000
     
     for wheel_type in wheel_types:
         print(f"\n--- Testing {wheel_type.upper()} Roulette ---")
         
-        # Create wheel, player, and game for this test
         wheel = RouletteWheel(wheel_type)
-        player = Player(strategy="flat", initial_bankroll=10000)  # Start with more money for accuracy
+        
+        # Configure Player
+        player = Player(strategy="flat", initial_bankroll=START_BANKROLL, base_bet=10)
+        
+        # *** CRITICAL FIX ***
+        # We must explicitly tell the new Game logic what we are betting on.
+        player.bet_type = "color"
+        player.bet_value = "red"
+        
         game = Game(wheel, player)
         
-        # Run a large number of spins for statistical significance
+        # Run 100,000 spins to let the Law of Large Numbers work
+        # Since 'Game' allows debt, this loop will finish completely.
         num_spins = 100000
         print(f"Running {num_spins:,} spins...")
         
-        # Run the simulation
         game.run_simulation(num_spins)
         
-        # Calculate results
+        # Calculate Results
         total_wagered = num_spins * player.base_bet
         final_bankroll = player.bankroll
-        total_loss = 10000 - final_bankroll  # Since we started with 10,000
         
-        # Calculate experimental house edge
+        # Calculate Total Loss (Start - End)
+        # This works even if final_bankroll is negative!
+        total_loss = START_BANKROLL - final_bankroll
+        
+        # Calculate House Edge: (Loss / Total Wagered) * 100
         experimental_edge = (total_loss / total_wagered) * 100
         
-        # Theoretical house edges (from our mathematical calculations)
+        # Theoretical values for comparison
         theoretical_edges = {
             "european": 2.70,
             "american": 5.26, 
@@ -51,10 +61,8 @@ def run_house_edge_experiment():
         }
         theoretical_edge = theoretical_edges[wheel_type]
         
-        # Calculate error (difference between theoretical and experimental)
         error = abs(theoretical_edge - experimental_edge)
         
-        # Display results
         print(f"Results for {wheel_type.upper()} roulette:")
         print(f"  • Total amount wagered: ${total_wagered:,}")
         print(f"  • Final bankroll: ${final_bankroll:,}")
@@ -63,7 +71,6 @@ def run_house_edge_experiment():
         print(f"  • Theoretical house edge: {theoretical_edge:.2f}%")
         print(f"  • Error: {error:.2f}%")
         
-        # Check if results are reasonable (within 0.2% of theoretical)
         if error < 0.5:
             print("  ✅ PASS: Experimental results match theory!")
         else:
