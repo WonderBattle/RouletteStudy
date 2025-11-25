@@ -5,16 +5,14 @@ sys.path.insert(0, '/home/elenacg/ADA511/Project/roulette_project')
 from components.roulette_wheel import RouletteWheel
 from components.player import Player
 from components.game import Game
-from utils.strategy_helpers import create_strategy_plot, create_enhanced_strategy_plot, analyze_martingale_risk
+from utils.strategy_helpers import (
+    create_strategy_plot, 
+    create_enhanced_strategy_plot, 
+    analyze_martingale_risk,
+    get_plot_path
+)
 import matplotlib.pyplot as plt
 
-def get_plot_path(filename):
-    """Get path for saving plots in experiment's plots folder"""
-    # Get the directory where THIS script is located
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    plots_dir = os.path.join(current_dir, "plots")
-    os.makedirs(plots_dir, exist_ok=True)
-    return os.path.join(plots_dir, filename)
 
 def run_american_strategy_comparison():
     """
@@ -89,15 +87,18 @@ def run_american_strategy_comparison():
     
     print(f"\n  • Sequences reaching each bet level: {sequence_max_bets}")
 
+    # [Define current_folder variable]
+    current_folder = os.path.dirname(os.path.abspath(__file__))
+
     # Create ENHANCED comparison plot (dual panel)
     fig = create_enhanced_strategy_plot(flat_bankrolls, martingale_bankrolls, martingale_bets, num_spins, wheel_type)
-    enhanced_path = get_plot_path('strategy_comparison_american_enhanced.png')  # ← USE FUNCTION
+    enhanced_path = get_plot_path(current_folder,'strategy_comparison_american_enhanced.png') 
     fig.savefig(enhanced_path, dpi=300, bbox_inches='tight')
     plt.show()
     
     # Also create original plot for comparison
     plt_original = create_strategy_plot(flat_bankrolls, martingale_bankrolls, num_spins, wheel_type)
-    original_path = get_plot_path('strategy_comparison_american_original.png')  # ← USE FUNCTION
+    original_path = get_plot_path(current_folder, 'strategy_comparison_american_original.png') 
     plt_original.savefig(original_path, dpi=300, bbox_inches='tight')
     plt_original.show()
     

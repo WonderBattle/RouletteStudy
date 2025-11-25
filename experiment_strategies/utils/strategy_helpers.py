@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
 # Color schemes for different roulette types in strategy comparisons
 STRATEGY_COLORS = {
@@ -19,6 +20,12 @@ STRATEGY_COLORS = {
         "martingale_bets": "saddlebrown"
     }
 }
+
+def get_plot_path(folder, filename):
+    plots_dir = os.path.join(folder, "plots")
+    os.makedirs(plots_dir, exist_ok=True)
+    return os.path.join(plots_dir, filename)
+
 
 def create_enhanced_strategy_plot(flat_history, martingale_history, martingale_bets, num_spins, wheel_type):
     """

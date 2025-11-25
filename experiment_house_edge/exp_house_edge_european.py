@@ -5,16 +5,9 @@ sys.path.insert(0, '/home/elenacg/ADA511/Project/roulette_project')
 from components.roulette_wheel import RouletteWheel
 from components.player import Player
 from components.game import Game
-from utils.plot_helpers import create_single_wheel_plot, THEORETICAL_EDGES
+from utils.plot_helpers import create_single_wheel_plot, THEORETICAL_EDGES, get_plot_path
 import numpy as np
 
-def get_plot_path(filename):
-    """Get path for saving plots in experiment's plots folder"""
-    # Get the directory where THIS script is located
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    plots_dir = os.path.join(current_dir, "plots")
-    os.makedirs(plots_dir, exist_ok=True)
-    return os.path.join(plots_dir, filename)
 
 def run_european_experiment():
     """
@@ -55,9 +48,12 @@ def run_european_experiment():
     print(f"Standard deviation: {std_dev:.2f}%")
     print(f"Range: {min(experimental_edges):.2f}% to {max(experimental_edges):.2f}%")
     
+    # [Define current_folder variable]
+    current_folder = os.path.dirname(os.path.abspath(__file__))
+
     # Create and save plot
     plt = create_single_wheel_plot(experimental_edges, wheel_type, num_runs, num_spins)
-    path = get_plot_path('european_house_edge.png')
+    path = get_plot_path(current_folder, 'european_house_edge.png')
     plt.savefig(path, dpi=300, bbox_inches='tight')
     plt.show()
     

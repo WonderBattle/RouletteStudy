@@ -1,3 +1,4 @@
+import os
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -26,6 +27,11 @@ THEORETICAL_EDGES = {
     "american": 5.26,
     "triple": 7.69
 }
+
+def get_plot_path(folder, filename):
+    plots_dir = os.path.join(folder, "plots")
+    os.makedirs(plots_dir, exist_ok=True)
+    return os.path.join(plots_dir, filename)
 
 def create_single_wheel_plot(experimental_edges, wheel_type, num_runs, num_spins):
     """
