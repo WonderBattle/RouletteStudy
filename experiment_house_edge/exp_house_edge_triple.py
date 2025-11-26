@@ -49,6 +49,7 @@ def run_triple_experiment():
     print(f"Average experimental edge: {average_edge:.2f}%")
     print(f"Theoretical edge: {THEORETICAL_EDGES[wheel_type]}%")
     print(f"Standard deviation: {std_dev:.2f}%")
+    print(f"Range: {min(experimental_edges):.2f}% to {max(experimental_edges):.2f}%")
     
     plt = create_single_wheel_plot(experimental_edges, wheel_type, num_runs, num_spins)
     

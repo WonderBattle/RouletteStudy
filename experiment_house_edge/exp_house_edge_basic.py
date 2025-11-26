@@ -17,7 +17,7 @@ def run_house_edge_experiment():
     
     wheel_types = ["european", "american", "triple"]
     
-    # We can use a realistic bankroll now because the Game allows debt!
+    # We can use a realistic bankroll because the Game allows debt!
     START_BANKROLL = 10000
     
     for wheel_type in wheel_types:
@@ -28,7 +28,6 @@ def run_house_edge_experiment():
         # Configure Player
         player = Player(strategy="flat", initial_bankroll=START_BANKROLL, base_bet=10)
         
-        # *** CRITICAL FIX ***
         # We must explicitly tell the new Game logic what we are betting on.
         player.bet_type = "color"
         player.bet_value = "red"
