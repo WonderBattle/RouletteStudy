@@ -158,9 +158,9 @@ def create_martingale_comparison(euro_data, amer_data, trip_data, num_players):
     bins = np.linspace(data_min, data_max, 60)
     
     # Plot with transparency
-    plt.hist(euro_data, bins=bins, alpha=0.5, label='European (1 Zero)', color='blue', edgecolor='black', density=True)
-    plt.hist(amer_data, bins=bins, alpha=0.5, label='American (2 Zeros)', color='orange', edgecolor='black', density=True)
-    plt.hist(trip_data, bins=bins, alpha=0.5, label='Triple Zero (3 Zeros)', color='green', edgecolor='black', density=True)
+    plt.hist(euro_data, bins=bins, alpha=0.5, label='European (1 Zero)', color='blue', edgecolor='black')
+    plt.hist(amer_data, bins=bins, alpha=0.5, label='American (2 Zeros)', color='orange', edgecolor='black')
+    plt.hist(trip_data, bins=bins, alpha=0.5, label='Triple Zero (3 Zeros)', color='green', edgecolor='black')
     
     # Reference Line (Start)
     plt.axvline(x=1000, color='red', linestyle='--', linewidth=2, label='Start ($1000)')
